@@ -1,0 +1,81 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+
+df = pd.read_csv("Unemployment in India.csv", sep=None,
+                 engine="python", encoding="utf-8-sig")
+
+df.columns = df.columns.str.strip()
+df["Date"] = pd.to_datetime(df["Date"].astype(str).str.strip(),
+                            dayfirst=True, errors="coerce")
+df["Estimated Unemployment Rate (%)"] = pd.to_numeric(
+    df["Estimated Unemployment Rate (%)"], errors="coerce")
+df = df.dropna(subset=["Date", "Estimated Unemployment Rate (%)"])
+df = df.drop_duplicates()
+df = df.sort_values("Date")
+
+print("\nUNEMPLOYMENT ANALYSIS")
+print(df.head())
+print("\nDataset Information:")
+df.info()
+print("\nStatistical Summary:")
+print(df["Estimated Unemployment Rate (%)"].describe())
+
+df["Period"] = df["Date"].apply(
+    lambda x: "Before COVID" if x < pd.Timestamp("2020-03-01")
+    else "During COVID")
+
+print("\nAverage Unemployment Before and During COVID-19:")
+print(df.groupby("Period")["Estimated Unemployment Rate (%)"].mean().round(2))
+
+df.groupby("Date")["Estimated Unemployment Rate (%)"].mean().plot(
+    figsize=(10, 5), marker="o")
+plt.title("Unemployment Rate Over Time")
+plt.xlabel("Date")
+plt.ylabel("Unemployment Rate (%)")
+plt.grid(True)
+plt.tight_layout()
+plt.show()
+
+df.groupby("Period")["Estimated Unemployment Rate (%)"].mean().reindex(
+    ["Before COVID", "During COVID"]).plot(
+    kind="bar", color=["skyblue", "orange"])
+plt.title("Unemployment Before and During COVID-19")
+plt.xlabel("Period")
+plt.ylabel("Average Unemployment Rate (%)")
+plt.tight_layout()
+plt.show()
+
+df["Month"] = df["Date"].dt.month
+df.groupby("Month")["Estimated Unemployment Rate (%)"].mean().plot(
+    kind="bar", color="green")
+plt.title("Monthly Unemployment Patterns")
+plt.xlabel("Month")
+plt.ylabel("Average Unemployment Rate (%)")
+plt.tight_layout()
+plt.show()
+
+print("\nAverage Unemployment Rate by Region:")
+region = df.groupby("Region")["Estimated Unemployment Rate (%)"].mean()
+print(region.sort_values(ascending=False).round(2))
+
+region.sort_values().plot(kind="barh", figsize=(10, 7))
+plt.title("Average Unemployment Rate by Region")
+plt.xlabel("Unemployment Rate (%)")
+plt.tight_layout()
+plt.show()
+
+print("\nHighest Unemployment Rate:")
+print(df.loc[df["Estimated Unemployment Rate (%)"].idxmax(),
+             ["Date", "Region", "Estimated Unemployment Rate (%)"]])
+
+print("\nLowest Unemployment Rate:")
+print(df.loc[df["Estimated Unemployment Rate (%)"].idxmin(),
+             ["Date", "Region", "Estimated Unemployment Rate (%)"]])
+
+print("\nCONCLUSION")
+print("The analysis shows unemployment trends over time.")
+print("The COVID comparison highlights changes in unemployment rates.")
+print("Monthly patterns help explore possible seasonal changes.")
+print("Regional results can help identify areas needing employment support.")
+
+print("\nAnalysis Completed Successfully!")
